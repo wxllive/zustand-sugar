@@ -10,9 +10,15 @@
   ],
   "main": "dist/index.js",
   "scripts": {
+    "prepublishOnly": "npm run build",
     "dev": "tsc -w",
     "build": "tsc"
   },
+  "files": [
+    "dist/*",
+    "!*.map",
+    "!*.tsbuildinfo"
+  ],
   "author": "",
   "license": "MIT",
   "devDependencies": {
