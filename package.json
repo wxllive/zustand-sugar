@@ -1,8 +1,13 @@
 {
   "name": "zustand-sugar",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "Writing zustand store methods that do not require predefined types.",
-  "keywords": ["zustand", "redux", "effects", "typescript"],
+  "keywords": [
+    "zustand",
+    "redux",
+    "effects",
+    "typescript"
+  ],
   "main": "dist/index.js",
   "scripts": {
     "dev": "tsc -w",
