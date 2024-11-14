@@ -37,7 +37,7 @@ export type ReduxOptions<S extends unknown, KTP extends ActionKeyToPayload, KTF 
   actionRewrite?: ActionRewrite;
 };
 
-type StoreSugar<S, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn> = {
+type StoreSugar<S, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn = {}> = {
   actions: AsyncActions<KTP & { reset: [] }, KTF>;
   originActions: Actions<KTP & { reset: [] }, KTF>;
   effects?: KTF;
@@ -60,7 +60,7 @@ const sugarImpl = <S extends {}, KTP extends ActionKeyToPayload, KTF extends Eff
   api: CustomStoreApi<S, KTP, KTF>,
 ): S => {
   if (registeredNameMap.has(options.name)) {
-    throw new Error(`名为 ${options.name} 的store创建多次，请检查是否命名错误`);
+    throw new Error(`The store named ${options.name} was created multiple times. Please check whether the name is wrong.`);
   }
   registeredNameMap.add(options.name);
 

@@ -3,7 +3,7 @@
     "skipLibCheck": true,
     "strict": true,
     "esModuleInterop": true,
-    "module": "CommonJS",
+    "module": "ES2015",
     "moduleResolution": "Node",
     "target": "ESNext",
     "resolveJsonModule": true,
