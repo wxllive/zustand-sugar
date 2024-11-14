@@ -1,6 +1,6 @@
 {
   "name": "zustand-sugar",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Writing zustand store methods that do not require predefined types.",
   "keywords": [
     "zustand",
