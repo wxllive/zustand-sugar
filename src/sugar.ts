@@ -14,15 +14,15 @@ export type Effects<S, KTF> = (set: StoreApi<S>['setState'], get: StoreApi<S>['g
 
 export type Actions<KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn> = {
   [A in keyof KTP]: (...args: KTP[A]) => KTP[A];
-} & KTF;
+} & (string extends keyof KTF ? {} : KTF);
 
 export type AsyncActions<KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn> = {
   [A in keyof KTP]: (...args: KTP[A]) => Promise<KTP[A]> | KTP[A];
-} & KTF;
+} & (string extends keyof KTF ? {} : KTF);
 
 export type ActionRewrite<P extends any[] = any[]> = (data: { name: string; action: string; payload: P }, origin: (...args: P) => P) => Promise<P> | P;
 
-export type ReduxOptions<S extends unknown, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn> = {
+export type ReduxOptions<S extends unknown, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn = {}> = {
   /**
    * just name
    */
@@ -40,7 +40,6 @@ export type ReduxOptions<S extends unknown, KTP extends ActionKeyToPayload, KTF 
 type StoreSugar<S, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn = {}> = {
   actions: AsyncActions<KTP & { reset: [] }, KTF>;
   originActions: Actions<KTP & { reset: [] }, KTF>;
-  effects?: KTF;
   ready: () => Promise<CustomStoreApi<S, KTP, KTF>>;
   wait: (condition: (state: S) => boolean) => Promise<CustomStoreApi<S, KTP, KTF>>;
   onAction: <K extends (keyof KTP | 'reset')>(action: K, listener: (...args: KTP[K]) => void) => () => void;
@@ -53,7 +52,11 @@ type WithSugar<S, A extends ActionKeyToPayload, KTF extends EffectKeyToFn> = S e
 export type CustomStoreApi<S extends unknown, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn> = StoreApi<S> & StoreSugar<S, KTP, KTF>;
 
 const registeredNameMap = new Set<string>();
-const sugarImpl = <S extends {}, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn>(options: ReduxOptions<S, KTP, KTF>) =>
+const sugarImpl = <
+  S extends {},
+  KTP extends ActionKeyToPayload,
+  KTF extends EffectKeyToFn = {},
+>(options: ReduxOptions<S, KTP, KTF>) =>
 (
   set: StoreApi<S>['setState'],
   get: StoreApi<S>['getState'],
@@ -73,20 +76,6 @@ const sugarImpl = <S extends {}, KTP extends ActionKeyToPayload, KTF extends Eff
     readyResolve = resolve;
   });
   const effects = options.effects ? options.effects?.(set, get) : {};
-
-  Object.keys(reducers).forEach(action => {
-    (originActions as any)[action] = (...args: KTP[keyof KTP]) => {
-      set((state: S) => reducers[action](state, ...args as any), true);
-
-      listeners.forEach(item => {
-        if (action === item.action) {
-          item.listener(...args);
-        }
-      });
-
-      return args;
-    };
-  });
 
   Object.keys(effects).forEach(action => {
     (originActions as any)[action] = (...args: any[]) => {
