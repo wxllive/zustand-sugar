@@ -20,8 +20,16 @@
     "!*.map",
     "!*.tsbuildinfo"
   ],
-  "author": "",
+  "author": "wxllive.com@gmail.com",
   "license": "MIT",
+  "homepage": "https://github.com/wxllive/zustand-sugar",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wxllive/zustand-sugar.git"
+  },
+  "bugs": {
+    "url": "https://github.com/wxllive/zustand-sugar/issues"
+  },
   "devDependencies": {
     "jest": "^29.7.0",
     "react": "^18.3.1",
