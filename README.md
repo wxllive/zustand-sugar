@@ -1,4 +1,8 @@
-# Install
+# zustand-sugar
+
+I didn’t want to write the function type and then the function implementation when creating a store, and I didn’t want to modify the function implementation when modifying the function type, so I created this library.
+
+# Installation
 
 ```
 npm i zustand-sugar
@@ -10,6 +14,7 @@ Create your store without having to write predefined types for the methods in it
 
 ```typescript
 import { create } from 'zustand';
+import { sugar } from 'zustand-sugar';
 
 interface BearState {
   bears: number;
@@ -19,17 +24,19 @@ const state: BearState = {
   bears: 0,
 };
 
-const useBearStore = create<BearState>()({
-  state,
-  reducers: {
-    increasePopulation: (state) => {
-      return { ...state, bears: state.bears + 1 };
+const useBearStore = create<BearState>()(
+  sugar({
+    state,
+    reducers: {
+      increasePopulation: (state) => {
+        return { ...state, bears: state.bears + 1 };
+      },
+      removeAllBears: (state) => {
+        return { ...state, bears: 0 };
+      },
     },
-    removeAllBears: (state) => {
-      return { ...state, bears: 0 };
-    },
-  },
-});
+  })
+);
 ```
 
 Then you can use the defined methods in the component through actions.
@@ -51,6 +58,7 @@ You can add side effects with the effects option.
 
 ```typescript
 import { create } from 'zustand';
+import { sugar } from 'zustand-sugar';
 
 interface BearState {
   bears: number;
@@ -60,21 +68,23 @@ const state: BearState = {
   bears: 0,
 };
 
-const useBearStore = create<BearState>()({
-  state,
-  reducers: {
-    removeAllBears: (state) => {
-      return { ...state, bears: 0 },
+const useBearStore = create<BearState>()(
+  sugar({
+    state,
+    reducers: {
+      removeAllBears: (state) => {
+        return { ...state, bears: 0 },
+      },
     },
-  },
-  effects: (set, get) => ({
-    increasePopulation: async () => {
-      // Wait one second
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      set({ bears: get().bears + 1 });
-    },
-  }),
-});
+    effects: (set, get) => ({
+      increasePopulation: async () => {
+        // Wait one second
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        set({ bears: get().bears + 1 });
+      },
+    }),
+  })
+);
 
 // Then you can also use actions to trigger side effects
 useBearStore.actions.increasePopulation();
