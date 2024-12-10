@@ -20,7 +20,6 @@ const state: BearState = {
 };
 
 const useBearStore = create<BearState>()({
-  name: 'bear-store',
   state,
   reducers: {
     increasePopulation: (state) => {
@@ -62,7 +61,6 @@ const state: BearState = {
 };
 
 const useBearStore = create<BearState>()({
-  name: 'bear-store',
   state,
   reducers: {
     removeAllBears: (state) => {
@@ -101,6 +99,7 @@ You can also listen for an action trigger.
 
 ```typescript
 useEffect(() => {
+  // return unsubscribe
   return useBearStore.onAction('increasePopulation', () => {
     console.log('increasePopulation');
   });

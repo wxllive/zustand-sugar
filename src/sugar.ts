@@ -12,34 +12,28 @@ export type Effects<S, KTF> = (set: StoreApi<S>['setState'], get: StoreApi<S>['g
   [E in keyof KTF]: KTF[E];
 };
 
+type ObjectMapping<A> = string extends keyof A ? {} : A;
+;
 export type Actions<KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn> = {
   [A in keyof KTP]: (...args: KTP[A]) => KTP[A];
 } & (string extends keyof KTF ? {} : KTF);
 
-export type AsyncActions<KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn> = {
-  [A in keyof KTP]: (...args: KTP[A]) => Promise<KTP[A]> | KTP[A];
-} & (string extends keyof KTF ? {} : KTF);
-
-export type ActionRewrite<P extends any[] = any[]> = (data: { name: string; action: string; payload: P }, origin: (...args: P) => P) => Promise<P> | P;
+export type ActionRewrite<P extends any[] = any[]> = (data: { action: string; payload: P }, origin: (...args: P) => P) => Promise<P> | P;
 
 export type ReduxOptions<S extends unknown, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn = {}> = {
-  /**
-   * just name
-   */
-  name: string;
   /**
    * initial state
    */
   state: S;
-  reducers: Reducers<S, KTP>;
+  reducers?: Reducers<S, KTP>;
   effects?: Effects<S, KTF>;
   initialize?: (api: CustomStoreApi<S, KTP, KTF>, resolve: (value: any) => void) => void;
   actionRewrite?: ActionRewrite;
 };
 
-type StoreSugar<S, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn = {}> = {
-  actions: AsyncActions<KTP & { reset: [] }, KTF>;
-  originActions: Actions<KTP & { reset: [] }, KTF>;
+type StoreSugar<S, KTP extends ActionKeyToPayload = {}, KTF extends EffectKeyToFn = {}> = {
+  actions: Actions<ObjectMapping<KTP> & { reset: [] }, KTF>;
+  originActions: Actions<ObjectMapping<KTP> & { reset: [] }, KTF>;
   ready: () => Promise<CustomStoreApi<S, KTP, KTF>>;
   wait: (condition: (state: S) => boolean) => Promise<CustomStoreApi<S, KTP, KTF>>;
   onAction: <K extends (keyof KTP | 'reset')>(action: K, listener: (...args: KTP[K]) => void) => () => void;
@@ -51,7 +45,6 @@ type WithSugar<S, A extends ActionKeyToPayload, KTF extends EffectKeyToFn> = S e
 
 export type CustomStoreApi<S extends unknown, KTP extends ActionKeyToPayload, KTF extends EffectKeyToFn> = StoreApi<S> & StoreSugar<S, KTP, KTF>;
 
-const registeredNameMap = new Set<string>();
 const sugarImpl = <
   S extends {},
   KTP extends ActionKeyToPayload,
@@ -62,12 +55,7 @@ const sugarImpl = <
   get: StoreApi<S>['getState'],
   api: CustomStoreApi<S, KTP, KTF>,
 ): S => {
-  if (registeredNameMap.has(options.name)) {
-    throw new Error(`The store named ${options.name} was created multiple times. Please check whether the name is wrong.`);
-  }
-  registeredNameMap.add(options.name);
-
-  const { name, actionRewrite, initialize, reducers, state } = options;
+  const { actionRewrite, initialize, reducers, state } = options;
   const listeners: { action: keyof KTP; listener: (...args: any) => void }[] = [];
   const originActions = { reset: () => set({ ...state }, true) } as CustomStoreApi<S, KTP, KTF>['originActions'];
   const actions = { ...originActions } as CustomStoreApi<S, KTP, KTF>['actions'];
@@ -88,28 +76,30 @@ const sugarImpl = <
     };
   });
 
-  Object.keys(reducers).forEach(action => {
-    (originActions as any)[action] = (...args: KTP[keyof KTP]) => {
-      set((state: S) => reducers[action](state, ...args as any), true);
+  if (reducers) {
+    Object.keys(reducers).forEach(action => {
+      (originActions as any)[action] = (...args: KTP[keyof KTP]) => {
+        set((state: S) => reducers[action](state, ...args as any), true);
+  
+        listeners.forEach(item => {
+          if (action === item.action) {
+            item.listener(...args);
+          }
+        });
+  
+        return args;
+      };
+    });
+  }
 
-      listeners.forEach(item => {
-        if (action === item.action) {
-          item.listener(...args);
-        }
-      });
-
-      return args;
-    };
-  });
-
-  Object.keys(originActions).forEach(action => {
+  Object.keys(originActions).forEach((action) => {
     (actions as any)[action] = actionRewrite
-      ? (...payload: []) => actionRewrite({ name, action, payload }, originActions[action])
-      : originActions[action];
+      ? (...payload: []) => actionRewrite({ action, payload }, (originActions as any)[action])
+      : (originActions as any)[action];
   });
 
-  api.actions = actions as AsyncActions<KTP & { reset: [] }, KTF>;
-  api.originActions = originActions as Actions<KTP & { reset: [] }, KTF>;
+  api.actions = actions as Actions<ObjectMapping<KTP> & { reset: [] }, KTF>;
+  api.originActions = originActions as Actions<ObjectMapping<KTP> & { reset: [] }, KTF>;
   api.ready = () => readyPromise;
   api.wait = async (condition) => {
     await readyPromise;

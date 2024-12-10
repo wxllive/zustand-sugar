@@ -32,13 +32,7 @@ describe('sugar with effects', () => {
     const state: ThemeState = { theme: 'light' };
     const useTheme = create<ThemeState>()(
         sugar({
-            name: 'theme',
             state,
-            reducers: {
-                setTheme (state, theme: ThemeState['theme']) {
-                    return {...state, theme };
-                }
-            },
             effects: (set, get) => ({
                 async save () {
                     localStorage.setItem('theme', get().theme);

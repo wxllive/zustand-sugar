@@ -10,7 +10,6 @@ describe('sugar', () => {
     const state: ThemeState = { theme: 'light' };
     const useTheme = create<ThemeState>()(
         sugar({
-            name: 'theme',
             state,
             reducers: {
                 setTheme (state, theme: ThemeState['theme']) {
