@@ -5,7 +5,7 @@ I didn’t want to write the function type and then the function implementation 
 # Installation
 
 ```
-npm i zustand-sugar
+npm i zustand-sugar zustand
 ```
 
 # Basic usage
@@ -27,14 +27,14 @@ const state: BearState = {
 const useBearStore = create<BearState>()(
   sugar({
     state,
-    reducers: {
-      increasePopulation: (state) => {
-        return { ...state, bears: state.bears + 1 };
+    actions: (set, get) => ({
+      increasePopulation: () => {
+        set({ bears: get().bears + 1 });
       },
-      removeAllBears: (state) => {
-        return { ...state, bears: 0 };
+      removeAllBears: () => {
+        set({ bears: 0 });
       },
-    },
+    }),
   })
 );
 ```
@@ -71,12 +71,11 @@ const state: BearState = {
 const useBearStore = create<BearState>()(
   sugar({
     state,
-    reducers: {
+    actions: (set, get) => ({
       removeAllBears: (state) => {
-        return { ...state, bears: 0 },
+        set({ bears: 0 });
       },
-    },
-    effects: (set, get) => ({
+
       increasePopulation: async () => {
         // Wait one second
         await new Promise(resolve => setTimeout(resolve, 1000));

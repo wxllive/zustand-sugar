@@ -11,11 +11,11 @@ describe('sugar', () => {
     const useTheme = create<ThemeState>()(
         sugar({
             state,
-            reducers: {
-                setTheme (state, theme: ThemeState['theme']) {
-                    return {...state, theme };
+            actions: (set) => ({
+                setTheme (theme: ThemeState['theme']) {
+                    set({ theme });
                 }
-            },
+            }),
         })
     );
 
